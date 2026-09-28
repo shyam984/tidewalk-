@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Tidewalk - free online token race for 4 or 5 friends</title>
+<meta name="description" content="Tidewalk is a free multiplayer token board game. Create a private room, share the 6-digit code and race four tokens home against 3 or 4 friends. No ads, no purchases.">
+<meta name="keywords" content="free online board game, multiplayer token game, play with friends, private room board game, dice game online">
+<meta property="og:title" content="Tidewalk - free online token race">
+<meta property="og:description" content="Race four tokens home against your friends in a private room. Free, no ads, no purchases.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#0c1b21">
+<style>
+:root{--bg:#0c1b21;--panel:#14303a;--panel2:#1b3f4b;--line:#2c5665;--sand:#f3e7c9;--mute:#8fb0ba;--ok:#3fcf8e;--bad:#ff7a70;
+--c0:#ef5b5b;--c1:#4aa3ff;--c2:#3fcf8e;--c3:#ffc233;--c4:#b58cff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{background:radial-gradient(1200px 700px at 50% -10%,#173c49,var(--bg));color:var(--sand);font:16px/1.4 "Avenir Next","Segoe UI",system-ui,sans-serif;overflow:hidden}
+h1,h2,.code{font-family:Rockwell,"Roboto Slab",Georgia,serif;margin:0}
+.screen{display:none;height:100%;overflow:auto;padding:max(16px,env(safe-area-inset-top)) 16px 24px}
+.screen.on{display:flex;flex-direction:column;align-items:center}
+.wrap{width:100%;max-width:520px;display:flex;flex-direction:column;gap:14px}
+.brand{font-size:44px;letter-spacing:.5px;text-align:center;margin-top:8px}
+.tag{text-align:center;color:var(--mute);margin:-8px 0 4px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px}
+.row{display:flex;gap:10px;align-items:center}
+.grow{flex:1}
+button{font:inherit;color:var(--sand);background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:12px 16px;cursor:pointer;min-height:48px}
+button:focus-visible,input:focus-visible{outline:3px solid var(--c3);outline-offset:2px}
+button.primary{background:var(--sand);color:#0c1b21;border-color:var(--sand);font-weight:700}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.sel{outline:3px solid var(--sand);background:#24515f}
+input{font:inherit;color:var(--sand);background:#0f252d;border:1px solid var(--line);border-radius:14px;padding:12px 14px;min-height:48px;width:100%}
+.coins{font-size:30px;font-weight:800}
+.small{color:var(--mute);font-size:14px}
+.grid{display:grid;gap:10px}
+.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr 1fr}
+.big{font-size:22px;font-weight:800;padding:18px 8px}
+.code{font-size:44px;letter-spacing:6px;text-align:center}
+.seat{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;background:#0f252d;border-left:8px solid var(--line)}
+.seat.empty{opacity:.55;border-left-color:transparent;border:1px dashed var(--line)}
+.av{font-size:26px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--ok);display:inline-block}
+.dot.off{background:var(--bad)}
+#game{padding:8px;justify-content:flex-start;overflow:hidden}
+#game .wrap{max-width:900px;height:100%;gap:8px}
+#chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.chip{flex:1;min-width:88px;background:var(--panel);border:2px solid var(--line);border-radius:12px;padding:6px 8px;font-size:13px;line-height:1.25}
+.chip.turn{background:var(--panel2);box-shadow:0 0 0 2px var(--sand)}
+.chip b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#boardbox{flex:1;min-height:0;position:relative}
+canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:manipulation}
+#bar{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:8px 12px}
+#die{width:58px;height:58px;border-radius:14px;background:var(--sand);color:#0c1b21;font-size:44px;line-height:58px;text-align:center;flex:none}
+#die.shake{animation:sh .45s}
+@keyframes sh{20%{transform:rotate(-14deg) scale(1.1)}50%{transform:rotate(12deg)}80%{transform:rotate(-6deg)}}
+#msg{flex:1;font-size:15px}
+dialog{background:var(--panel);color:var(--sand);border:1px solid var(--line);border-radius:18px;max-width:360px;padding:20px}
+dialog::backdrop{background:#000a}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--sand);color:#0c1b21;padding:12px 18px;border-radius:14px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .2s;z-index:9;max-width:90%}
+#toast.on{opacity:1}
+#net{position:fixed;top:0;left:0;right:0;background:var(--bad);color:#200;text-align:center;font-weight:700;padding:6px;display:none;z-index:9}
+.res{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:10px 12px;border-radius:14px;background:#0f252d}
+.pos{font-family:Rockwell,Georgia,serif;font-size:22px;width:40px}
+.plus{font-weight:800}
+@media (prefers-reduced-motion:reduce){#die.shake{animation:none}}
+</style>
+</head>
+<body>
+<div id="net">Connection lost. Reconnecting...</div>
+<div id="toast" role="status"></div>
+
+<!-- HOME -->
+<section id="home" class="screen"><div class="wrap">
+  <h1 class="brand">Tidewalk</h1>
+  <p class="tag">Race four tokens home. Free, no ads, no purchases.</p>
+  <div class="card" id="nameCard" hidden>
+    <label class="small" for="nameIn">Pick a player name</label>
+    <div class="row"><input id="nameIn" maxlength="14" placeholder="Your name" autocomplete="nickname"><button class="primary" id="nameGo">Start playing</button></div>
+  </div>
+  <div id="homeMain" hidden>
+    <div class="card row"><span class="av" id="hAv"></span><div class="grow"><b id="hName"></b><div class="small">Coins</div></div><div class="coins" id="hCoins">0</div></div>
+    <div class="card"><div class="row"><div class="grow"><b>FREE 100 COINS</b><div class="small" id="claimTxt"></div></div><button class="primary" id="claimBtn">CLAIM</button></div></div>
+    <div class="grid g2"><button class="primary big" id="toCreate">Create game</button><button class="big" id="toJoin">Join game</button></div>
+    <div class="card" id="joinBox" hidden>
+      <h2>Join game</h2>
+      <div class="small" style="margin:6px 0">Enter room number</div>
+      <div class="row"><input id="codeIn" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="______"><button class="primary" id="joinGo">Join</button></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- CREATE -->
+<section id="create" class="screen"><div class="wrap">
+  <h2>Create game</h2>
+  <div class="card"><div class="small" style="margin-bottom:8px">Players</div>
+    <div class="grid g2"><button class="big" data-max="4">4 players</button><button class="big" data-max="5">5 players</button></div></div>
+  <div class="card"><div class="small" style="margin-bottom:8px">Entry</div>
+    <div class="grid g3" id="entries"></div></div>
+  <div class="card small" id="createInfo"></div>
+  <div class="grid g2"><button id="createBack">Back</button><button class="primary" id="createGo">Create room</button></div>
+</div></section>
+
+<!-- WAITING ROOM -->
+<section id="wait" class="screen"><div class="wrap">
+  <div class="small" style="text-align:center">ROOM</div>
+  <div class="code" id="wCode"></div>
+  <div class="row" style="justify-content:center"><button id="copyBtn">Copy code</button><button id="shareBtn">Share</button></div>
+  <div class="card"><div class="small" style="margin-bottom:8px">Players</div><div class="grid" id="wSeats"></div></div>
+  <div class="card"><b>Entry: <span id="wEntry"></span> coins</b><div class="small" id="wPlan" style="margin-top:6px"></div></div>
+  <div class="grid g2"><button id="wLeave">LEAVE ROOM</button><button class="primary" id="wStart">START GAME</button></div>
+</div></section>
+
+<!-- GAME -->
+<section id="game" class="screen"><div class="wrap">
+  <div id="chips"></div>
+  <div id="boardbox"><canvas id="cv" aria-label="Game board"></canvas></div>
+  <div id="bar">
+    <div id="die">&#9856;</div><div id="msg"></div>
+    <button class="primary" id="rollBtn">Roll</button><button id="gLeave">Leave</button>
+  </div>
+</div></section>
+
+<!-- RESULT -->
+<section id="result" class="screen"><div class="wrap">
+  <h2 style="text-align:center;font-size:32px">GAME FINISHED</h2>
+  <div class="grid" id="resList"></div>
+  <div class="card small" id="resNote"></div>
+  <button class="primary big" id="resHome">Back to lobby</button>
+</div></section>
+
+<dialog id="leaveDlg"><h2>Leave game?</h2><p id="leaveTxt"></p>
+  <div class="grid g2"><button id="leaveNo">CANCEL</button><button class="primary" id="leaveYes">CONFIRM</button></div></dialog>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const $=s=>document.querySelector(s), fmt=n=>Number(n).toLocaleString('en-US');
+const COL=['#ef5b5b','#4aa3ff','#3fcf8e','#ffc233','#b58cff'], AV=['🐙','🦀','🐢','🦑','🐬','🦭','🐚'], SEG=13;
+const socket=io(); let me=null, room=null, cfg={max:4,entry:500}, claimLeft=0, claimStamp=0, lastRollN=0, deadlineIn=0, deadlineStamp=0;
+const emit=(ev,d)=>new Promise(r=>socket.emit(ev,d||{},r));
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),2600)}
+async function act(ev,d){const r=await emit(ev,d);if(r&&r.error)toast(r.error);return r}
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id))}
+
+// ---- connection / identity ----
+async function hello(name){
+  const r=await emit('hello',{secret:localStorage.getItem('tw_secret')||'',name});
+  if(r.error){toast(r.error);return false}
+  localStorage.setItem('tw_secret',r.secret);setMe(r.me);setRoom(r.room);return true;
+}
+socket.on('connect',async()=>{$('#net').style.display='none';
+  if(localStorage.getItem('tw_secret')){await hello('')}
+  else{$('#nameCard').hidden=false;$('#homeMain').hidden=true;show('home')}});
+socket.on('disconnect',()=>{$('#net').style.display='block'});
+socket.on('me',setMe);
+socket.on('room',setRoom);
+$('#nameGo').onclick=async()=>{if(await hello($('#nameIn').value))$('#nameCard').hidden=true};
+
+function setMe(m){me=m;claimLeft=m.claimIn;claimStamp=performance.now();
+  $('#nameCard').hidden=true;$('#homeMain').hidden=false;
+  $('#hAv').textContent=AV[m.avatar%AV.length];$('#hName').textContent=m.name;$('#hCoins').textContent=fmt(m.coins);
+  if(!room)show('home');updateClaim();if(room)renderRoom()}
+function updateClaim(){
+  const left=Math.max(0,claimLeft-(performance.now()-claimStamp)); // monotonic timer, never the device clock
+  const b=$('#claimBtn');b.disabled=left>0;
+  if(left>0){const s=Math.ceil(left/1000);$('#claimTxt').textContent=`Available in ${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;b.textContent='WAIT'}
+  else{$('#claimTxt').textContent='Ready: +100 coins';b.textContent='CLAIM'}
+}
+setInterval(updateClaim,250);
+$('#claimBtn').onclick=async()=>{const r=await act('claim');if(r.ok)toast('+100 coins')};
+
+// ---- home / create / join ----
+$('#toJoin').onclick=()=>{$('#joinBox').hidden=!$('#joinBox').hidden;$('#codeIn').focus()};
+$('#joinGo').onclick=()=>act('joinRoom',{code:$('#codeIn').value});
+$('#codeIn').addEventListener('keydown',e=>{if(e.key==='Enter')$('#joinGo').click()});
+$('#toCreate').onclick=()=>{show('create');drawCreate()};
+$('#createBack').onclick=()=>show('home');
+$('#createGo').onclick=()=>act('createRoom',cfg);
+$('#entries').innerHTML=[120,300,500,1000,2000].map(e=>`<button class="big" data-entry="${e}">${fmt(e)}</button>`).join('');
+document.querySelectorAll('[data-max]').forEach(b=>b.onclick=()=>{cfg.max=+b.dataset.max;drawCreate()});
+document.querySelectorAll('[data-entry]').forEach(b=>b.onclick=()=>{cfg.entry=+b.dataset.entry;drawCreate()});
+function drawCreate(){
+  document.querySelectorAll('[data-max]').forEach(b=>b.classList.toggle('sel',+b.dataset.max===cfg.max));
+  document.querySelectorAll('[data-entry]').forEach(b=>b.classList.toggle('sel',+b.dataset.entry===cfg.entry));
+  const E=cfg.entry,n=cfg.max,mid=n-2,each=Math.floor((n*E-2*E)/mid);
+  $('#createInfo').innerHTML=`Pool ${fmt(n*E)} coins. Winner ${fmt(2*E)}, places 2 to ${n-1} ${fmt(each)} each, last place 0.`+(me&&me.coins<E?`<br><b style="color:var(--bad)">Not enough coins.</b>`:'');
+}
+
+// ---- room routing ----
+function setRoom(r){room=r;if(!r){if(me)show('home');return}renderRoom()}
+function renderRoom(){
+  if(!room)return;
+  if(room.status==='WAITING'||room.status==='STARTING'){renderWait();show('wait')}
+  else if(room.status==='PLAYING'){renderGame();if(!$('#game').classList.contains('on')){show('game');resize()}}
+  else if(room.status==='FINISHED'){renderGame();renderResult();show('result')}
+}
+function renderWait(){
+  $('#wCode').textContent=room.code;$('#wEntry').textContent=fmt(room.entry);
+  $('#wSeats').innerHTML=Array.from({length:room.max},(_,i)=>{const s=room.seats[i];
+    return s?`<div class="seat" style="border-left-color:${COL[i]}"><span class="av">${AV[s.avatar%AV.length]}</span><b class="grow">${esc(s.name)}${s.pid===room.hostId?' (host)':''}</b><span class="dot ${s.connected?'':'off'}"></span></div>`
+            :`<div class="seat empty"><span class="av">·</span><span class="grow">Waiting…</span></div>`}).join('');
+  const p=room.plan;
+  $('#wPlan').innerHTML=p?`Winner: ${fmt(p.prizes[0])} coins<br>Places 2 to ${room.max-1}: ${fmt(p.prizes[1])} each<br>Last place: 0<br>Total pool: ${fmt(p.pool)}`+(p.remainder?`<br>Game remainder: ${fmt(p.remainder)}`:''):`<b style="color:var(--bad)">${esc(room.planError)}</b>`;
+  const host=me&&room.hostId===me.id, full=room.seats.length===room.max;
+  const b=$('#wStart');b.disabled=!host||!full||!p;b.textContent=host?(full?'START GAME':`WAITING FOR ${room.max-room.seats.length}`):'HOST STARTS';
+}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+$('#copyBtn').onclick=async()=>{try{await navigator.clipboard.writeText(room.code);toast('Code copied')}catch{toast('Room '+room.code)}};
+$('#shareBtn').onclick=()=>{const t=`Join my Tidewalk game! Room ${room.code} at ${location.origin}`;
+  if(navigator.share)navigator.share({text:t}).catch(()=>{});else navigator.clipboard.writeText(t).then(()=>toast('Invite copied'))};
+$('#wStart').onclick=()=>act('start');
+function askLeave(){$('#leaveTxt').textContent=room&&room.status==='PLAYING'?'Leaving a game after it starts may affect your position. Your entry is not refunded.':'You will leave this room.';$('#leaveDlg').showModal()}
+$('#wLeave').onclick=askLeave;$('#gLeave').onclick=askLeave;
+$('#leaveNo').onclick=()=>$('#leaveDlg').close();
+$('#leaveYes').onclick=async()=>{$('#leaveDlg').close();await act('leaveRoom');room=null;show('home')};
+$('#resHome').onclick=async()=>{await act('leaveRoom');room=null;show('home')};
+
+// ---- game UI ----
+const mySeat=()=>room?room.seats.findIndex(s=>s.pid===me.id):-1;
+function renderGame(){
+  const g=room.g;if(!g)return;
+  $('#chips').innerHTML=room.seats.map((s,i)=>{const fp=g.finished.indexOf(i);
+    return `<div class="chip ${g.turn===i&&g.phase!=='done'?'turn':''}" style="border-color:${COL[i]}"><b>${AV[s.avatar%AV.length]} ${esc(s.name)}${i===mySeat()?' (you)':''}</b>${fmt(s.coins)} coins ${fp>=0?'· '+['1st','2nd','3rd','4th','5th'][fp]:''}${s.abandoned?' · bot':(!s.connected?' · away':'')}</div>`}).join('');
+  deadlineIn=g.left;deadlineStamp=performance.now();
+  if(g.lastRoll&&g.lastRoll.n!==lastRollN){lastRollN=g.lastRoll.n;const d=$('#die');d.textContent=String.fromCharCode(9855+g.lastRoll.d);d.style.color=COL[g.lastRoll.seat];d.classList.remove('shake');void d.offsetWidth;d.classList.add('shake')}
+  const mine=g.turn===mySeat(),playing=room.status==='PLAYING';
+  $('#rollBtn').disabled=!(mine&&g.phase==='roll'&&playing);
+  $('#msg').textContent=(g.log||'')+(playing&&mine&&g.phase==='roll'?' Your turn: roll!':'')+(playing&&mine&&g.phase==='move'?' Tap a glowing token.':'');
+}
+$('#rollBtn').onclick=()=>act('roll');
+function renderResult(){
+  const g=room.g;
+  $('#resList').innerHTML=g.results.map(r=>`<div class="res" style="border-left:8px solid ${COL[r.seat]}"><span class="pos">${['','1st','2nd','3rd','4th','5th'][r.pos]}</span><b>${esc(r.name)}</b><span class="plus" style="color:${r.prize>0?'var(--ok)':'var(--mute)'}">+${fmt(r.prize)} coins</span></div>`).join('');
+  const my=g.results.find(r=>r.seat===mySeat());
+  $('#resNote').innerHTML=`Entry ${fmt(room.entry)} each. Total pool ${fmt(room.plan.pool)}.`+(my?`<br>Your result: ${my.net>=0?'+':''}${fmt(my.net)} coins. Balance: ${fmt(me.coins)}.`:'')+(room.remainder?`<br>Game remainder: ${fmt(room.remainder)} coins.`:'');
+}
+
+// ---- board drawing ----
+const cv=$('#cv'),ctx=cv.getContext('2d');let S=300,cx=150,cy=150,R=120,disp={};
+function resize(){const b=$('#boardbox').getBoundingClientRect(),dpr=window.devicePixelRatio||1;
+  cv.width=b.width*dpr;cv.height=b.height*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);
+  S=Math.min(b.width,b.height);cx=b.width/2;cy=b.height/2;R=S*0.4}
+addEventListener('resize',resize);
+const Lr=()=>SEG*room.max, ang=i=>2*Math.PI*i/Lr()-Math.PI/2;
+const ringPt=(i,r=R)=>[cx+r*Math.cos(ang(i)),cy+r*Math.sin(ang(i))];
+const sqR=()=>Math.PI*2*R/Lr()*0.42;
+function yardCenter(s){const a=ang(SEG*s+6);return[cx+R*0.5*Math.cos(a),cy+R*0.5*Math.sin(a)]}
+function target(seat,t,p){
+  const L=Lr(),FIN=L+4;
+  if(p===-1){const[x,y]=yardCenter(seat),o=S*0.045,k=[[-1,-1],[1,-1],[-1,1],[1,1]][t];return[x+k[0]*o,y+k[1]*o]}
+  if(p<=L-2)return ringPt((SEG*seat+p)%L);
+  const idx=(SEG*seat+L-1)%L;
+  if(p<FIN)return ringPt(idx,R*(0.87-0.125*(p-(L-1))));
+  const[x,y]=ringPt(idx,R*0.17),o=(t-1.5)*sqR()*0.9;return[x+o*Math.cos(ang(idx)+Math.PI/2),y+o*Math.sin(ang(idx)+Math.PI/2)]}
+function frame(now){
+  requestAnimationFrame(frame);
+  if(!room||!room.g||!$('#game').classList.contains('on'))return;
+  const g=room.g,n=room.max,L=Lr(),sq=sqR(),tr=sq*1.15;
+  ctx.clearRect(0,0,cv.width,cv.height);
+  // sea disc
+  ctx.fillStyle='#10303a';ctx.beginPath();ctx.arc(cx,cy,R+sq*3,0,7);ctx.fill();
+  ctx.strokeStyle='#2c5665';ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,cy,R+sq*1.8,0,7);ctx.stroke();
+  // yards
+  for(let s=0;s<n;s++){const[x,y]=yardCenter(s);ctx.fillStyle=COL[s]+'33';ctx.strokeStyle=COL[s];ctx.lineWidth=g.turn===s&&g.phase!=='done'?4:2;
+    ctx.beginPath();ctx.arc(x,y,S*0.1,0,7);ctx.fill();ctx.stroke();
+    for(let t=0;t<4;t++){const[a,b]=target(s,t,-1);ctx.fillStyle='#0c1b2166';ctx.beginPath();ctx.arc(a,b,tr*0.8,0,7);ctx.fill()}}
+  // home paths
+  for(let s=0;s<n;s++){const idx=(SEG*s+L-1)%L;for(let k=0;k<5;k++){const[x,y]=ringPt(idx,R*(0.87-0.125*k));ctx.fillStyle=COL[s]+'88';ctx.beginPath();ctx.arc(x,y,sq,0,7);ctx.fill()}}
+  // centre wedges
+  for(let s=0;s<n;s++){const a=ang((SEG*s+L-1)%L);ctx.fillStyle=COL[s];ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,R*0.27,a-Math.PI/n,a+Math.PI/n);ctx.closePath();ctx.fill()}
+  ctx.fillStyle='#10303a';ctx.beginPath();ctx.arc(cx,cy,R*0.07,0,7);ctx.fill();
+  // ring
+  for(let i=0;i<L;i++){const[x,y]=ringPt(i),seat=i%SEG===0?i/SEG:-1,safe=i%SEG===0||i%SEG===8;
+    ctx.fillStyle=seat>=0?COL[seat]:'#1f4653';ctx.strokeStyle='#3b6f80';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(x,y,sq,0,7);ctx.fill();ctx.stroke();
+    if(safe){ctx.fillStyle=seat>=0?'#0c1b21':'#f3e7c9aa';ctx.font=`${sq*1.5}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('★',x,y+sq*0.08)}}
+  // tokens
+  const seen={},me_=mySeat(),pulse=1+0.25*Math.sin(now/180),items=[];
+  g.tokens.forEach((tk,s)=>tk.forEach((p,t)=>{let[x,y]=target(s,t,p);const key=Math.round(x)+','+Math.round(y);
+    if(p!==-1&&p<L+4){const c=seen[key]=(seen[key]||0)+1;x+=(c-1)*tr*0.55;y-=(c-1)*tr*0.55}
+    const k=s+'-'+t,d=disp[k]||(disp[k]={x,y});d.x+=(x-d.x)*0.22;d.y+=(y-d.y)*0.22;items.push({s,t,d})}));
+  items.forEach(({s,t,d})=>{const can=room.status==='PLAYING'&&s===me_&&g.turn===s&&g.phase==='move'&&g.legal.includes(t);
+    if(can){ctx.strokeStyle='#f3e7c9';ctx.lineWidth=3;ctx.beginPath();ctx.arc(d.x,d.y,tr*1.35*pulse,0,7);ctx.stroke()}
+    ctx.fillStyle=COL[s];ctx.strokeStyle='#0c1b21';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(d.x,d.y,tr,0,7);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#ffffff66';ctx.beginPath();ctx.arc(d.x-tr*0.3,d.y-tr*0.3,tr*0.28,0,7);ctx.fill()});
+  // turn timer text
+  if(room.status==='PLAYING'){const sec=Math.max(0,Math.ceil((deadlineIn-(performance.now()-deadlineStamp))/1000));
+    ctx.fillStyle='#f3e7c9';ctx.font=`700 ${S*0.045}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(sec+'s',cx,cy)}
+}
+requestAnimationFrame(frame);
+cv.addEventListener('click',e=>{
+  if(!room||room.status!=='PLAYING'||!room.g)return;const g=room.g;
+  if(g.turn!==mySeat()||g.phase!=='move')return;
+  const b=cv.getBoundingClientRect(),x=e.clientX-b.left,y=e.clientY-b.top,tr=sqR()*1.15;
+  let best=null,bd=1e9;
+  g.legal.forEach(t=>{const d=disp[mySeat()+'-'+t];if(!d)return;const dd=Math.hypot(d.x-x,d.y-y);if(dd<bd){bd=dd;best=t}});
+  if(best!==null&&bd<tr*2.6)act('move',{token:best});
+});
+</script>
+</body>
+</html>
