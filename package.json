@@ -1,0 +1,9 @@
+{
+  "name": "tidewalk",
+  "version": "1.0.0",
+  "description": "Tidewalk: a free 4-5 player online token race with a server-authoritative coin economy.",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" },
+  "dependencies": { "express": "^4.19.2", "socket.io": "^4.7.5" }
+}
